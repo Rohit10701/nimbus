@@ -15,10 +15,13 @@
     "preview": "vite preview"
   },
   "dependencies": {
+    "@faker-js/faker": "^9.0.3",
     "@monaco-editor/react": "^4.6.0",
     "@reduxjs/toolkit": "^2.3.0",
     "@tanstack/react-router": "^1.76.1",
     "axios": "^1.7.7",
+    "casual": "^1.6.2",
+    "chance": "^1.1.12",
     "cors": "^2.8.5",
     "express": "^4.21.1",
     "parse-json": "^8.1.0",
@@ -29,6 +32,7 @@
   "devDependencies": {
     "@tanstack/router-devtools": "^1.76.1",
     "@tanstack/router-plugin": "^1.76.0",
+    "@types/chance": "^1.1.6",
     "@types/cors": "^2.8.17",
     "@types/express": "^5.0.0",
     "@types/react": "^18.2.64",

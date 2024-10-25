@@ -37720,7 +37720,7 @@ const mainServer = async () => {
     try {
       const jsonData = parseJson(req2.body.data);
       const mockData = generateTheMockDataFromSchema(jsonData);
-      console.log({ mockData });
+      console.log(JSON.stringify(mockData, null, 2));
       res2.json({ mockData });
     } catch (error2) {
       if (error2 instanceof JSONError) {

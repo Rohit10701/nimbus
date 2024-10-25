@@ -1,6 +1,7 @@
 import express, { Request, Response } from 'express';
 import cors from 'cors';
 import parseJson, { JSONError } from 'parse-json';
+import { Fields } from './types/mockData';
 
 type JsonObjectType = {
     [key: string]: keyof Fields | JsonObjectType;
@@ -21,33 +22,24 @@ function generateTheMockDataFromSchema(data: JsonObjectType): JsonObjectType {
 }
 
 
-Copy code
-type Fields = {
-    "$firstname": string[];
-    "$lastname": string[];
-    "$age": number[];                // Array of ages as numbers
-    "$email": string[];              // Array of email addresses as strings
-    "$city": string[];               // Array of city names as strings
-    "$occupation": string[];         // Array of occupations as strings
-    "$hobby": string[];              // Array of hobbies as strings
-};
 
-// Predefined fields for mock data
-const fields: Fields = {
-    "$firstname": ["josh", "kyle", "anna", "james", "karl"],
-    "$lastname": ["wattson", "alan", "bond", "maddy", "tyler"],
-    "$age": [25, 30, 22, 28, 35],
-    "$email": [
-        "josh@example.com",
-        "kyle@example.com",
-        "anna@example.com",
-        "james@example.com",
-        "karl@example.com"
-    ],
-    "$city": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"],
-    "$occupation": ["Engineer", "Designer", "Doctor", "Teacher", "Chef"],
-    "$hobby": ["Reading", "Traveling", "Gaming", "Cooking", "Hiking"]
-};
+
+// // Predefined fields for mock data
+// const fields: Fields = {
+//     "$firstname": ["josh", "kyle", "anna", "james", "karl"],
+//     "$lastname": ["wattson", "alan", "bond", "maddy", "tyler"],
+//     "$age": [25, 30, 22, 28, 35],
+//     "$email": [
+//         "josh@example.com",
+//         "kyle@example.com",
+//         "anna@example.com",
+//         "james@example.com",
+//         "karl@example.com"
+//     ],
+//     "$city": ["New York", "Los Angeles", "Chicago", "Houston", "Phoenix"],
+//     "$occupation": ["Engineer", "Designer", "Doctor", "Teacher", "Chef"],
+//     "$hobby": ["Reading", "Traveling", "Gaming", "Cooking", "Hiking"]
+// };
 
 
 // Main server function
@@ -68,7 +60,7 @@ const mainServer = async () => {
             // Parse the incoming JSON and generate mock data
             const jsonData  = parseJson(req.body.data) as JsonObjectType
             const mockData = generateTheMockDataFromSchema(jsonData);
-            console.log({ mockData }); // Log the generated mock data
+            console.log(JSON.stringify(mockData, null, 2)); // Log the generated mock data
             
             res.json({ mockData }); // Send the mock data back in the response
         } catch (error) {
