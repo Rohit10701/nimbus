@@ -1,98 +1,81 @@
 import { Fields } from "../../types/mockData";
-import { Chance } from "chance"
-import casual from "casual";
-import { getRandomLanguage, getRandomNationality, getRandomPronoun, getRandomRelationship } from "./randomGenerator";
-export function GenerateUserProfileMockData(schemaFieldQueryString :keyof Fields) {
-    const chance = new Chance()
+import { Chance } from "chance";
+import {
+    getRandomLanguage,
+    getRandomNationality,
+    getRandomPronoun,
+    getRandomRelationship
+} from "./randomGenerator";
 
-    switch (schemaFieldQueryString) {
-        case "$firstName":
-            return  chance.first()
-        case "$lastName":
-            return chance.last()
-        case "$fullName":
-            return casual.full_name
-        case "$prefixName":
-            return casual.name_prefix
-        case "$suffixName":
-            return casual.name_suffix
-        case "$middleName":
-            return casual.name
-        case "$displayName":
-            return casual.username
-        case "$nickname":
-            return casual.name
-        case "$age":
-            return Math.floor(Math.random() * 100)
-        case "$birthday":
-            return chance.birthday
-        case "$gender":
-            return chance.gender
-        case "$pronouns":
-            return getRandomPronoun()
-        case "$nationality":
-            return getRandomNationality()
-        case "$language":
-            return  getRandomLanguage()
-        case "$timezone":
-            return chance.timezone
-        case "$email":
-            return casual.email
-        case "$phoneNumber":
-            return casual.phone
-        case "$alternativeEmail":
-            return casual.email
-        case "$relationship":
-            return getRandomRelationship()
-        case "$address":
-            return casual.address
-        case "$address1":
-            return casual.address1
-        case "$address2":
-            return casual.address2
-        case "$addressCity":
-            return casual.city
-        case "$addressState":
-            return casual.state
-        case "$addressCountry":
-            return casual.country
-        case "$addressPostalCode":
-        case "$userId":
-        case "$username":
-        case "$accountStatus":
-        case "$registrationDate":
-        case "$lastLoginDate":
-        case "$lastActivityDate":
-        case "$accountType":
-        case "$verificationStatus":
-        case "$emailNotifications":
-        case "$pushNotifications":
-        case "$marketingPreferencesEmail":
-        case "$marketingPreferencesSms":
-        case "$marketingPreferencesPush":
-        case "$communicationLanguage":
-        case "$theme":
-        case "$socialProfilesLinkedin":
-        case "$socialProfilesTwitter":
-        case "$socialProfilesFacebook":
-        case "$socialProfilesGithub":
-        case "$occupation":
-        case "$company":
-        case "$department":
-        case "$jobTitle":
-        case "$skills":
-        case "$professionalBio":
-        case "$twoFactorEnabled":
-        case "$lastPasswordChange":
-        case "$securityQuestionsQuestion":
-        case "$securityQuestionsAnswer":
-        case "$tags":
-        case "$notes":
-        case "$customFields":
-        case "$lastModified":
-        case "$createdBy":
-        case "$updatedBy":
-        default:
-            break;
-    }
+export function generateRandomDataForFields(schemaFieldQueryString: keyof Fields) {
+    const chance = new Chance();
+
+    // Mapping schema fields to their corresponding chance methods or functions
+    const fieldMap: Record<keyof Fields, () => any> = {
+        "$firstName": () => chance.first(),
+        "$lastName": () => chance.last(),
+        "$fullName": () => chance.name(),
+        "$prefixName": () => chance.name_prefix(),
+        "$suffixName": () => chance.name_suffix(),
+        "$displayName": () => chance.name(),
+        "$nickname": () => chance.name(),
+        "$age": () => Math.floor(Math.random() * 100),
+        "$birthday": () => chance.birthday(),
+        "$gender": () => chance.gender(),
+        "$pronouns": () => getRandomPronoun(),
+        "$nationality": () => getRandomNationality(),
+        "$language": () => getRandomLanguage(),
+        "$timezone": () => chance.timezone(),
+        "$email": () => chance.email(),
+        "$phoneNumber": () => chance.phone(),
+        "$alternativeEmail": () => chance.email(),
+        "$relationship": () => getRandomRelationship(),
+        "$address": () => chance.address(),
+        "$address1": () => chance.street(),
+        "$addressCity": () => chance.city(),
+        "$addressState": () => chance.state(),
+        "$addressCountry": () => chance.country(),
+        "$addressPostalCode": () => chance.zip(),
+        "$userId": () => chance.guid(), // Example: Generate a unique user ID
+        "$username": () => chance.word(), // Example: Generate a username
+        "$accountStatus": () => chance.bool(), // Example: Random account status
+        "$registrationDate": () => chance.date(), // Example: Generate a registration date
+        "$lastLoginDate": () => chance.date(), // Example: Generate a last login date
+        "$lastActivityDate": () => chance.date(), // Example: Generate a last activity date
+        "$accountType": () => chance.word(), // Example: Generate account type
+        "$verificationStatus": () => chance.bool(), // Example: Random verification status
+        "$emailNotifications": () => chance.bool(), // Example: Random email notification preference
+        "$pushNotifications": () => chance.bool(), // Example: Random push notification preference
+        "$marketingPreferencesEmail": () => chance.bool(), // Example: Email marketing preference
+        "$marketingPreferencesSms": () => chance.bool(), // Example: SMS marketing preference
+        "$marketingPreferencesPush": () => chance.bool(), // Example: Push marketing preference
+        "$communicationLanguage": () => getRandomLanguage(), // Example: Random communication language
+        "$theme": () => chance.word(), // Example: Generate a random theme
+        "$socialProfilesLinkedin": () => chance.url(), // Example: Generate a LinkedIn profile URL
+        "$socialProfilesTwitter": () => chance.url(), // Example: Generate a Twitter profile URL
+        "$socialProfilesFacebook": () => chance.url(), // Example: Generate a Facebook profile URL
+        "$socialProfilesGithub": () => chance.url(), // Example: Generate a GitHub profile URL
+        "$occupation": () => chance.profession(), // Example: Generate a profession
+        "$company": () => chance.company(), // Example: Generate a company name
+        "$department": () => chance.word(), // Example: Generate a department name
+        "$jobTitle": () => chance.sentence({ words: 2 }), // Example: Generate a job title
+        "$skills": () => chance.words({ count: 3 }).join(", "), // Example: Generate skills list
+        "$professionalBio": () => chance.paragraph(), // Example: Generate a professional bio
+        "$twoFactorEnabled": () => chance.bool(), // Example: Random two-factor authentication status
+        "$lastPasswordChange": () => chance.date(), // Example: Generate a last password change date
+        "$securityQuestionsQuestion": () => chance.sentence(), // Example: Generate a security question
+        "$securityQuestionsAnswer": () => chance.word(), // Example: Generate a security question answer
+        "$tags": () => chance.words({ count: 3 }).join(", "), // Example: Generate tags
+        "$notes": () => chance.paragraph(), // Example: Generate notes
+        "$customFields": () => ({}), // Example: Generate custom fields object
+        "$lastModified": () => chance.date(), // Example: Generate last modified date
+        "$createdBy": () => chance.name(), // Example: Generate creator name
+        "$updatedBy": () => chance.name(), // Example: Generate updater name
+        "$middleName": () => chance.first(), // Example: Generate a middle name
+        "$emergencyContactPhone": () => chance.phone(), // Example: Generate an emergency contact phone number
+        "$address2": () => chance.street(), // Example: Generate a second address line
+    };
+
+    // Return the generated data based on the schema field query string
+    return fieldMap[schemaFieldQueryString]?.() || null; // Return null for unknown fields
 }

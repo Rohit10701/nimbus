@@ -30,6 +30,7 @@
     "react-redux": "^9.1.2"
   },
   "devDependencies": {
+    "@rollup/plugin-commonjs": "^28.0.1",
     "@tanstack/router-devtools": "^1.76.1",
     "@tanstack/router-plugin": "^1.76.0",
     "@types/chance": "^1.1.6",

@@ -2,6 +2,7 @@ import express, { Request, Response } from 'express';
 import cors from 'cors';
 import parseJson, { JSONError } from 'parse-json';
 import { Fields } from './types/mockData';
+import { generateRandomDataForFields } from './utils/mockData/generateUserProfile';
 
 type JsonObjectType = {
     [key: string]: keyof Fields | JsonObjectType;
@@ -9,13 +10,12 @@ type JsonObjectType = {
 // Function to generate mock data from schema based on predefined fields
 function generateTheMockDataFromSchema(data: JsonObjectType): JsonObjectType {
     for (let key of Object.keys(data)) {
-        const value = data[key]
+        const value = data[key] as JsonObjectType
         if (typeof value === "object" && value !== null) {
             data[key] = generateTheMockDataFromSchema(value) as JsonObjectType;
-        } else if (fields[value as keyof Fields]) {
+        } else if (generateRandomDataForFields(value)) {
             // If the value corresponds to a key in fields, assign a random value from that field
-            const randomValue = fields[value as keyof Fields][Math.floor(Math.random() * fields[value as keyof Fields].length)];
-            data[key] = randomValue as keyof Fields;
+            data[key] = generateRandomDataForFields(value)
         }
     }
     return data;

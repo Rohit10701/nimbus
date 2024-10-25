@@ -2,33 +2,53 @@ import path from 'node:path'
 import electron from 'vite-plugin-electron/simple'
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
-import viteReact from '@vitejs/plugin-react'
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
-
+import commonjs from '@rollup/plugin-commonjs'
 
 // https://vitejs.dev/config/
 export default defineConfig({
+  build: {
+    commonjsOptions: {
+      dynamicRequireTargets: [
+        // Add the specific paths that need dynamic require
+        'providers/address',
+        'providers/**/*.js'
+      ],
+      transformMixedEsModules: true,
+    }
+  },
   plugins: [
-    // react(),
+    react(),
     TanStackRouterVite(),
-    viteReact(),
     electron({
       main: {
-        // Shortcut of `build.lib.entry`.
+        // Shortcut of `build.lib.entry`
         entry: 'electron/main.ts',
       },
       preload: {
-        // Shortcut of `build.rollupOptions.input`.
-        // Preload scripts may contain Web assets, so use the `build.rollupOptions.input` instead `build.lib.entry`.
+        // Shortcut of `build.rollupOptions.input`
         input: path.join(__dirname, 'electron/preload.ts'),
       },
-      // Ployfill the Electron and Node.js API for Renderer process.
-      // If you want use Node.js in Renderer process, the `nodeIntegration` needs to be enabled in the Main process.
-      // See 👉 https://github.com/electron-vite/vite-plugin-electron-renderer
       renderer: process.env.NODE_ENV === 'test'
-        // https://github.com/electron-vite/vite-plugin-electron-renderer/issues/78#issuecomment-2053600808
         ? undefined
         : {},
     }),
+    commonjs({
+      // Move these options to the root level of commonjs config
+      include: ['providers/**'],
+      dynamicRequireTargets: [
+        // Use relative paths from the project root
+        './providers/address',
+        './providers/**/*.js'
+      ],
+      ignoreDynamicRequires: false,
+      transformMixedEsModules: true,
+    }),
   ],
+  resolve: {
+    alias: {
+      // Add an alias for the providers directory
+      '@providers': path.resolve(__dirname, 'providers')
+    }
+  }
 })
