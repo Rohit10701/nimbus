@@ -65,7 +65,7 @@ export function generateRandomDataForFields(schemaFieldQueryString: keyof Fields
         "$lastPasswordChange": () => chance.date(), // Example: Generate a last password change date
         "$securityQuestionsQuestion": () => chance.sentence(), // Example: Generate a security question
         "$securityQuestionsAnswer": () => chance.word(), // Example: Generate a security question answer
-        "$tags": () => chance.words({ count: 3 }).join(", "), // Example: Generate tags
+        "$tags": () => chance.word({ count: 3 }).join(", "), // Example: Generate tags
         "$notes": () => chance.paragraph(), // Example: Generate notes
         "$customFields": () => ({}), // Example: Generate custom fields object
         "$lastModified": () => chance.date(), // Example: Generate last modified date

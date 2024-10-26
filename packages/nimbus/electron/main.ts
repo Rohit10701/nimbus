@@ -1,7 +1,8 @@
-import { app, BrowserWindow } from 'electron'
+import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import mainServer from './server/app'
+import { runClientIpc } from './server/_ipc'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -46,6 +47,13 @@ function createWindow() {
   }
 }
 
+// Listen for messages from the renderer process
+ipcMain.on('request-message', (event, arg) => {
+  console.log(`Received request: ${arg}`);
+  const responseMessage = `Message from backend: ${arg}`;
+  // Send a response back to the renderer process
+  event.reply('response-message', responseMessage);
+});
 
 
 // Quit when all windows are closed, except on macOS. There, it's common
@@ -68,4 +76,6 @@ app.on('activate', () => {
 
 app.whenReady().then(createWindow)
 
+
 mainServer()
+runClientIpc()

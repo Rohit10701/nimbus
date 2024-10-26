@@ -18,7 +18,16 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
     const [channel, ...omit] = args
     return ipcRenderer.invoke(channel, ...omit)
   },
-
   // You can expose other APTs you need here.
   // ...
 })
+
+
+
+
+
+
+contextBridge.exposeInMainWorld('electron', {
+  sendMessage: (message) => ipcRenderer.send('request-message', message),
+  onMessageResponse: (callback) => ipcRenderer.on('response-message', (event, response) => callback(response)),
+});

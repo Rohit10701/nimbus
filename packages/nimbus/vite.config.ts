@@ -8,25 +8,21 @@ import commonjs from '@rollup/plugin-commonjs'
 // https://vitejs.dev/config/
 export default defineConfig({
   build: {
-    commonjsOptions: {
-      dynamicRequireTargets: [
-        // Add the specific paths that need dynamic require
-        'providers/address',
-        'providers/**/*.js'
-      ],
-      transformMixedEsModules: true,
-    }
-  },
+    target: 'esnext',
+    rollupOptions: {
+        output: {
+            format: 'cjs', 
+        },
+    },
+},
   plugins: [
     react(),
     TanStackRouterVite(),
     electron({
       main: {
-        // Shortcut of `build.lib.entry`
         entry: 'electron/main.ts',
       },
       preload: {
-        // Shortcut of `build.rollupOptions.input`
         input: path.join(__dirname, 'electron/preload.ts'),
       },
       renderer: process.env.NODE_ENV === 'test'
@@ -34,12 +30,11 @@ export default defineConfig({
         : {},
     }),
     commonjs({
-      // Move these options to the root level of commonjs config
       include: ['providers/**'],
       dynamicRequireTargets: [
-        // Use relative paths from the project root
         './providers/address',
-        './providers/**/*.js'
+        './providers/**/*.js',
+        './dist-electron/**/*.mjs'
       ],
       ignoreDynamicRequires: false,
       transformMixedEsModules: true,
