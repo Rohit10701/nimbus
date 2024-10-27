@@ -49807,16 +49807,6 @@ const mainServer = async () => {
     console.log(`Server is running on http://localhost:${PORT}`);
   });
 };
-function sendFieldSuggestions() {
-  ipcMain.on("request-message", (event, arg) => {
-    console.log(`Received request: ${arg}`);
-    const responseMessage = `Message from backend: ${arg}`;
-    event.reply("response-message", responseMessage);
-  });
-}
-function runClientIpc() {
-  sendFieldSuggestions();
-}
 const __dirname = path$3.dirname(fileURLToPath(import.meta.url));
 process.env.APP_ROOT = path$3.join(__dirname, "..");
 const VITE_DEV_SERVER_URL = process.env["VITE_DEV_SERVER_URL"];
@@ -49825,14 +49815,16 @@ const RENDERER_DIST = path$3.join(process.env.APP_ROOT, "dist");
 process.env.VITE_PUBLIC = VITE_DEV_SERVER_URL ? path$3.join(process.env.APP_ROOT, "public") : RENDERER_DIST;
 let win;
 function createWindow() {
-  win = new BrowserWindow(
-    {
-      icon: path$3.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
-      webPreferences: {
-        preload: path$3.join(__dirname, "preload.mjs")
-      }
+  win = new BrowserWindow({
+    icon: path$3.join(process.env.VITE_PUBLIC, "electron-vite.svg"),
+    webPreferences: {
+      contextIsolation: true,
+      nodeIntegration: false,
+      javascript: true,
+      preload: path$3.join(__dirname, "preload.mjs")
     }
-  );
+  });
+  win.webContents.openDevTools();
   win.webContents.on("did-finish-load", () => {
     win == null ? void 0 : win.webContents.send("main-process-message", (/* @__PURE__ */ new Date()).toLocaleString());
   });
@@ -49858,9 +49850,11 @@ app.on("activate", () => {
     createWindow();
   }
 });
+ipcMain.handle("get-suggestions", async () => {
+  return [];
+});
 app.whenReady().then(createWindow);
 mainServer();
-runClientIpc();
 export {
   MAIN_DIST,
   RENDERER_DIST,

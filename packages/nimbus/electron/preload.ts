@@ -27,7 +27,6 @@ contextBridge.exposeInMainWorld('ipcRenderer', {
 
 
 
-contextBridge.exposeInMainWorld('electron', {
-  sendMessage: (message) => ipcRenderer.send('request-message', message),
-  onMessageResponse: (callback) => ipcRenderer.on('response-message', (event, response) => callback(response)),
+contextBridge.exposeInMainWorld('electronAPI', {
+  getSuggestions: () => ipcRenderer.invoke('get-suggestions'),
 });

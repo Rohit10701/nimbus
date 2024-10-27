@@ -1,7 +1,6 @@
 import React, { useEffect, useState } from 'react'
 import SchemaEditor from '../editors/SchemaEditor'
 import axios from 'axios'
-import { ipcRenderer } from 'electron'
 
 export const SchemaContainer = () => {
 	const [jsonSchemaPayload, setJsonSchemaPayload] = useState<string>()
@@ -15,18 +14,12 @@ export const SchemaContainer = () => {
 		console.log({ res })
 	}
   useEffect(() => {
-    const message = "adsdasd";
-    window.electron.sendMessage(message);
-
-    const handleResponse = (event, response) => {
-        console.log({ response });
-    };
-
-    window.electron.onMessageResponse(handleResponse);
-
-    return () => {
-        ipcRenderer.removeListener('response-message', handleResponse);
-    };
+	const fetchSuggestion = async () => {
+		console.log('electronAPI:', window.electronAPI);
+		const suggestions = await window.electronAPI?.getSuggestions();
+		console.log({suggestions})
+	}
+	fetchSuggestion()
 }, []);
 
 
