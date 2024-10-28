@@ -8,16 +8,17 @@ export const SchemaContainer = () => {
 		setJsonSchemaPayload(value)
 	}
 	const logger = async () => {
-		const res = await axios.post('http://localhost:3000/', 
+		const res = await axios.post('http://localhost:5000/mockSchemaApi', 
 			{
 				schema : jsonSchemaPayload,
-				metadata : {limit : 10,
-				version  : 1,
-				delay: 200, // min would be 50ms
-				errorRate : 0.1, // 10% max is 1
-				errorCode : "500",
-				authEnabled : true
-			}
+				metadata : {
+					limit : 20,
+					version  : 1,
+					delay: 200, // min would be 50ms
+					errorRate : 10, // 10% max is 100
+					errorCode : 500,
+					authEnabled : true
+				}
 			}
 		)
 		console.log({ res })
@@ -48,12 +49,11 @@ export const SchemaContainer = () => {
 	)
 }
 
-
-{
-	first_name : "$firstName",
-	last_name :  "$lastName",
-	product_details : {
-		product_id : "$uuid",
-		product_name : "$productName"
-	}
-}
+// {
+// 	first_name : "$firstName",
+// 	last_name :  "$lastName",
+// 	product_details : {
+// 		product_id : "$uuid",
+// 		product_name : "$productName"
+// 	}
+// }

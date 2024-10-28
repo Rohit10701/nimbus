@@ -1,19 +1,12 @@
-import express, { Request, Response } from 'express';
-import cors from 'cors';
-import parseJson, { JSONError } from 'parse-json';
-import { JsonObjectType } from './types/json';
-import { generateTheMockDataFromSchema } from './utils/json';
+import express from 'express'
+import cors from 'cors'
+import { mockApiRouter } from './routes/mockSchemaRoutes'
 
+const app = express()
 
+app.use(express.json())
+app.use(cors())
 
+app.use('/mockSchemaApi', mockApiRouter)
 
-const app = express();
-
-app.use(express.json());
-app.use(cors());
-
-app.use("/mockSchemaApi", )
-
-
-
-export {app}
+export { app }

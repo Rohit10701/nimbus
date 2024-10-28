@@ -1,10 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import mainServer from './server/app'
-import { runClientIpc } from './server/_ipc'
-import { Profile } from './server/types/mock/mockData'
-import { keys } from 'ts-transformer-keys'
+import { nodeServer } from './server/server'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -87,5 +84,4 @@ ipcMain.handle('get-suggestions', async () => {
 
 app.whenReady().then(createWindow)
 
-mainServer()
-runClientIpc()
+nodeServer()

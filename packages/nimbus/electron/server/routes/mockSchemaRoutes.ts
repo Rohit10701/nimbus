@@ -1,8 +1,11 @@
 import express from "express"
-import mockSchemaController from "../controller/mockSchemaController"
+import {createMockApi, getMockApi, deleteMockApi, listMockApis} from "../controller/mockSchemaController"
 
-const router = express.Router();
+const mockApiRouter = express.Router();
 
-router.post('/', mockSchemaController);
+mockApiRouter.post('/', createMockApi);
+mockApiRouter.get('/:id', getMockApi);
+mockApiRouter.get('/', listMockApis);
+mockApiRouter.delete('/', deleteMockApi)
 
-module.exports = router;
+export {mockApiRouter};

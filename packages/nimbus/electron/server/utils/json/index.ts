@@ -1,5 +1,5 @@
 import { JsonObjectType } from "../../types/json";
-import { Fields } from "../../types/mock/mockData";
+import { Fields } from "../../types/mock/mockDataTemplate";
 import { generateRandomDataForFields } from "../mock/generateUserProfile";
 
 // Function to generate mock data from schema based on predefined fields

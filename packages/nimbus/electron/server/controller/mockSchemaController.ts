@@ -1,181 +1,269 @@
-import parseJson, { JSONError } from 'parse-json'
-import { Request, Response } from 'express'
-import { JsonObjectType } from '../types/json'
-import { generateTheMockDataFromSchema } from '../utils/json'
-import { v4 as uuidv4 } from 'uuid'
-import { realm } from '../config/realm'
-import { sleep } from '../utils'
+import { Request, Response } from 'express';
+import { v4 as uuidv4 } from 'uuid';
+import { JsonObjectType } from '../types/json';
+import { generateTheMockDataFromSchema } from '../utils/json';
+import { realm } from '../config/realm';
+import { handleError, simulateLatency, validateMetadata } from '../utils/contollers/mock';
 
-const validateMetadata = (metadata: any) => {
-	const { limit, delay, errorRate, errorCode, authEnabled } = metadata
 
-	if (typeof limit !== 'number' || limit <= 0) {
-		throw new Error('Limit must be a positive number.')
-	}
-	if (typeof delay !== 'number' || delay < 0) {
-		throw new Error('Delay must be a non-negative number.')
-	}
-	if (typeof errorRate !== 'number' || errorRate < 0 || errorRate > 100) {
-		throw new Error('Error rate must be between 0 and 100.')
-	}
-	if (typeof errorCode !== 'string' || !errorCode.trim()) {
-		throw new Error('Error code must be a non-empty string.')
-	}
-	if (typeof authEnabled !== 'boolean') {
-		throw new Error('Auth enabled must be a boolean value.')
-	}
-}
 
-//  Checks if this error is custom Error created by validateMetadata()
-const isErrorWithMessage = (error: unknown): error is { message: string } => {
-	return (
-		typeof error === 'object' &&
-		error !== null &&
-		'message' in error &&
-		typeof (error as any).message === 'string'
-	)
-}
+// CREATE - Create new mock data
+export const createMockApi = async (req: Request, res: Response): Promise<void> => {
+  const startTime = Date.now();
+  const requestId = uuidv4();
 
-const createMockApi = async (req: Request, res: Response) => {
-	if (!req.body || !req.body.schema || !req.body.metadata) {
-		return res.status(400).json({ error: "Request body must include 'schema' and 'metadata'." })
-	}
+  try {
+    if (!req.body?.schema || !req.body?.metadata) {
+      res.status(400).json({
+        error: "Request body must include 'schema' and 'metadata'.",
+        requestId,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
 
-	try {
-		const jsonData: JsonObjectType = parseJson(req.body.schema) as JsonObjectType
+    const metadata: MockApiMetadata = req.body.metadata;
+    validateMetadata(metadata);
 
-		validateMetadata(req.body.metadata)
+    // Simulate errors if specified
+    if (metadata.errorRate && Math.random() * 100 < metadata.errorRate) {
+      const errorCode = parseInt(metadata.errorCode || '500');
+      res.status(errorCode).json({
+        error: `Simulated error (${errorCode})`,
+        requestId,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
 
-		const { limitFromRequest, delay, errorRate, errorCode, authEnabled } = req.body.metadata
-		const limit = limitFromRequest || 20
-		const mockData: JsonObjectType[] = Array.from({ length: limit }, () =>
-			generateTheMockDataFromSchema(jsonData)
-		)
-		// TODO : start time
-		const startTime = Date.now()
+    const jsonSchema: JsonObjectType = req.body.schema;
+    const limit = metadata.limit || 10;
+    const mockData: JsonObjectType[] = Array.from(
+      { length: limit },
+      () => generateTheMockDataFromSchema(jsonSchema)
+    );
 
-		realm().write(() => {
-			const requestMetadata = realm().create('RequestMetadata', {
-				_id: uuidv4(),
-				version: req.body.metadata.version,
-				limit
-			})
+    // Store in database
+    const mockApiId = uuidv4();
+    realm().write(() => {
+      realm().create('MockApiData', {
+        _id: mockApiId,
+        schema: JSON.stringify(jsonSchema),
+        data: JSON.stringify(mockData),
+        createdAt: new Date(),
+        metadata: {
+          version: metadata.version,
+          limit
+        }
+      });
+    });
 
-			realm().create('MockApiData', {
-				_id: uuidv4(),
-				schema: JSON.stringify(jsonData),
-				data: JSON.stringify(mockData),
-				createdAt: new Date(),
-				metadata: requestMetadata
-			})
-		})
+    // Removed old constant delay simulation
+    await simulateLatency(metadata);
 
-		//  TODO : end time
-		/*
-            totalTime = endTime - startTime
-            responseTime = 5ms ( res.status(201).json({ message: "Mock data created successfully.", mockData }); )
-            delay = 100ms // req.body.metadata.delay
-            sleepTime = delay - totalTime  - responseTime
-            sleepTime > 0 ? sleep(sleepTime) :
-        */
-		const endTime = Date.now()
-		const totalTime = endTime - startTime
+    // Add custom headers if specified
+    if (metadata.headers) {
+      Object.entries(metadata.headers).forEach(([key, value]) => {
+        res.setHeader(key, value);
+      });
+    }
 
-		const responseTime = 5 // Assuming System takes 5ms to deliver the response res.status(201)
-		const sleepTime = delay - totalTime - responseTime
+    const response: MockApiResponse<{ id: string; data: JsonObjectType[] }> = {
+      data: {
+        id: mockApiId,
+        data: mockData
+      },
+      metadata: {
+        requestId,
+        timestamp: new Date().toISOString(),
+        processingTime: Date.now() - startTime
+      }
+    };
 
-		if (sleepTime > 0) {
-			await sleep(sleepTime)
-		}
-
-		res.status(201).json({ message: 'Mock data created successfully.', mockData })
-	} catch (error) {
-		console.error({ error })
-
-		if (error instanceof JSONError) {
-			return res.status(400).json({ error: 'Invalid JSON format.' })
-		} else if (
-			isErrorWithMessage(error) &&
-			(error.message.startsWith('Limit') ||
-				error.message.startsWith('Delay') ||
-				error.message.startsWith('Error rate'))
-		) {
-			return res.status(400).json({ error: error.message })
-		} else {
-			return res.status(500).json({ error: 'Internal Server Error.' })
-		}
-	}
-}
-
-const getSingleMockApi = async (req: Request, res: Response) => {
-	// Extract page, limit, ...
-	const { mockDataId, page, limit, delay, errorRate, errorCode, authEnabled, noLimit } = req.query;
-
-	// Validate the presence of mockDataId
-	if (!mockDataId || typeof mockDataId !== 'string') {
-		return res
-			.status(400)
-			.json({ error: "Query parameter 'mockDataId' is required and must be a string." });
-	}
-
-	// Start time for performance measurement
-	const startTime = Date.now();
-
-	try {
-		const mockApiData = realm().objects('MockApiData').filtered('id == $0', mockDataId).toJSON();
-
-		// If no data found, respond with 404
-		if (mockApiData.length === 0) {
-			return res.status(404).json({ error: 'No mock data found with the provided ID.' });
-		}
-
-		// Simulate an error based on errorRate
-		if (errorRate) {
-			const randomValue = Math.random() * 100; // Generate a number between 0 and 100
-			if (randomValue < parseFloat(errorRate as string)) {
-				return res.status(500).json({ error: 'Simulated internal server error based on error rate.' });
-			}
-		}
-
-		if (errorCode) {
-			switch (errorCode) {
-				case '400':
-					return res.status(400).json({ error: 'Simulated bad request error.' });
-				case '401':
-					return res.status(401).json({ error: 'Simulated unauthorized error.' });
-				case '404':
-					return res.status(404).json({ error: 'Simulated not found error.' });
-				case '500':
-					return res.status(500).json({ error: 'Simulated internal server error.' });
-				default:
-					return res.status(400).json({ error: 'Invalid error code provided.' });
-			}
-		}
-
-		const pageNum = parseInt(page as string, 10) || 1; // Default to page 1
-		const limitNum = parseInt(limit as string, 10) || 10; // Default to 10 items
-		const startIndex = (pageNum - 1) * limitNum;
-		const endIndex = startIndex + limitNum;
-
-		const responseData = noLimit ? mockApiData : mockApiData.slice(startIndex, endIndex);
-		
-		const endTime = Date.now();
-		const totalTime = endTime - startTime;
-
-		const responseTime = 5;
-		const sleepTime = (delay ? parseInt(delay as string, 10) : 0) - totalTime - responseTime; // Remaining time to sleep
-
-		if (sleepTime > 0) {
-		    await sleep(sleepTime); // Delay before sending the response
-		}
-
-		res.status(200).json({ mockData: responseData });
-	} catch (error) {
-		console.error({ error });
-		return res.status(500).json({ error: 'Internal Server Error.' });
-	}
+    res.status(201).json(response);
+  } catch (error) {
+    handleError(error, requestId, res);
+  }
 };
 
+// READ - Get mock data with pagination and filtering
+export const getMockApi = async (req: Request, res: Response): Promise<void> => {
+  const startTime = Date.now();
+  const requestId = uuidv4();
 
+  try {
+    const { id } = req.params;
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query as unknown as PaginationOptions;
+    const metadata: MockApiMetadata = req.query as unknown as MockApiMetadata;
 
-export {createMockApi, getSingleMockApi}
+    if (!id) {
+      throw new Error('Mock API ID is required');
+    }
+
+    validateMetadata(metadata);
+
+    // Simulate errors if specified
+    if (metadata.errorRate && Math.random() * 100 < metadata.errorRate) {
+      const errorCode = parseInt(metadata.errorCode || '500');
+      res.status(errorCode).json({
+        error: `Simulated error (${errorCode})`,
+        requestId,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    /*
+
+        It checks if _id provided in realm object is equal to first params which is id ( $0 represent first params)
+
+    */
+    const mockApiData = realm()
+      .objects('MockApiData')
+      .filtered('_id == $0', id)
+      .sorted(sortBy, sortOrder === 'desc');
+
+    if (mockApiData.length === 0) {
+      res.status(404).json({
+        error: 'Mock API not found',
+        requestId,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const startIndex = (Number(page) - 1) * Number(limit);
+    const endIndex = startIndex + Number(limit);
+    const paginatedData = mockApiData.slice(startIndex, endIndex);
+
+    await simulateLatency(metadata);
+
+    const response: MockApiResponse<typeof paginatedData> = {
+      data: paginatedData,
+      metadata: {
+        requestId,
+        timestamp: new Date().toISOString(),
+        processingTime: Date.now() - startTime,
+        page: Number(page),
+        totalPages: Math.ceil(mockApiData.length / Number(limit)),
+        totalRecords: mockApiData.length
+      }
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    handleError(error, requestId, res);
+  }
+};
+
+// DELETE - Delete mock data
+export const deleteMockApi = async (req: Request, res: Response): Promise<void> => {
+  const startTime = Date.now();
+  const requestId = uuidv4();
+
+  try {
+    const { id } = req.params;
+    const metadata: MockApiMetadata = req.query as unknown as MockApiMetadata;
+
+    if (!id) {
+      throw new Error('Mock API ID is required');
+    }
+
+    validateMetadata(metadata);
+
+    // Simulate errors if specified
+    if (metadata.errorRate && Math.random() * 100 < metadata.errorRate) {
+      const errorCode = parseInt(metadata.errorCode || '500');
+      res.status(errorCode).json({
+        error: `Simulated error (${errorCode})`,
+        requestId,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const mockApiData = realm()
+      .objects('MockApiData')
+      .filtered('_id == $0', id);
+
+    if (mockApiData.length === 0) {
+      res.status(404).json({
+        error: 'Mock API not found',
+        requestId,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    realm().write(() => {
+      realm().delete(mockApiData);
+    });
+
+    await simulateLatency(metadata);
+
+    const response: MockApiResponse<null> = {
+      data: null,
+      metadata: {
+        requestId,
+        timestamp: new Date().toISOString(),
+        processingTime: Date.now() - startTime
+      }
+    };
+
+    res.status(204).json(response);
+  } catch (error) {
+    handleError(error, requestId, res);
+  }
+};
+
+// LIST - Get all mock APIs with pagination
+export const listMockApis = async (req: Request, res: Response): Promise<void> => {
+  const startTime = Date.now();
+  const requestId = uuidv4();
+
+  try {
+    const { page = 1, limit = 10, sortBy = 'createdAt', sortOrder = 'desc' } = req.query as unknown as PaginationOptions;
+    const metadata: MockApiMetadata = req.query as unknown as MockApiMetadata;
+
+    validateMetadata(metadata);
+
+    // Simulate errors if specified
+    if (metadata.errorRate && Math.random() * 100 < metadata.errorRate) {
+      const errorCode = parseInt(metadata.errorCode || '500');
+      res.status(errorCode).json({
+        error: `Simulated error (${errorCode})`,
+        requestId,
+        timestamp: new Date().toISOString()
+      });
+      return;
+    }
+
+    const allMockApis = realm()
+      .objects('MockApiData')
+      .sorted(sortBy, sortOrder === 'desc');
+
+    const startIndex = (Number(page) - 1) * Number(limit);
+    const endIndex = startIndex + Number(limit);
+    const paginatedData = allMockApis.slice(startIndex, endIndex);
+
+    await simulateLatency(metadata);
+
+    const response: MockApiResponse<typeof paginatedData> = {
+      data: paginatedData,
+      metadata: {
+        requestId,
+        timestamp: new Date().toISOString(),
+        processingTime: Date.now() - startTime,
+        page: Number(page),
+        totalPages: Math.ceil(allMockApis.length / Number(limit)),
+        totalRecords: allMockApis.length
+      }
+    };
+
+    res.status(200).json(response);
+  } catch (error) {
+    handleError(error, requestId, res);
+  }
+};
+
+// Note - check the commit `07fee67c` in ipc-test branch for 1st iteration
