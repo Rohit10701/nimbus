@@ -1,4 +1,4 @@
-import { Fields } from "../../types/mockData";
+import { Fields } from "../../types/mock/mockData";
 import { Chance } from "chance";
 import {
     getRandomLanguage,

@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react'
+import React, { useEffect, useState, version } from 'react'
 import SchemaEditor from '../editors/SchemaEditor'
 import axios from 'axios'
 
@@ -8,9 +8,18 @@ export const SchemaContainer = () => {
 		setJsonSchemaPayload(value)
 	}
 	const logger = async () => {
-		const res = await axios.post('http://localhost:3000/', {
-			data: jsonSchemaPayload
-		})
+		const res = await axios.post('http://localhost:3000/', 
+			{
+				schema : jsonSchemaPayload,
+				metadata : {limit : 10,
+				version  : 1,
+				delay: 200, // min would be 50ms
+				errorRate : 0.1, // 10% max is 1
+				errorCode : "500",
+				authEnabled : true
+			}
+			}
+		)
 		console.log({ res })
 	}
   useEffect(() => {
@@ -37,4 +46,14 @@ export const SchemaContainer = () => {
 			/>
 		</div>
 	)
+}
+
+
+{
+	first_name : "$firstName",
+	last_name :  "$lastName",
+	product_details : {
+		product_id : "$uuid",
+		product_name : "$productName"
+	}
 }

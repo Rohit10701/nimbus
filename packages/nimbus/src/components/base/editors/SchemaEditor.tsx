@@ -36,16 +36,16 @@ const SchemaEditor = ({ value, updateHandler }: SchemaEditorProps) => {
 				return {
 					suggestions: [
 						{
-							label: '$customOption1',
+							label: '$firstName',
 							kind: monaco.languages.CompletionItemKind.Function,
-							insertText: '$customOption1',
+							insertText: '$firstName',
 							range: range,
 							detail: 'Custom option 1'
 						},
 						{
-							label: '$customOption2',
+							label: '$lastName',
 							kind: monaco.languages.CompletionItemKind.Function,
-							insertText: '$customOption2',
+							insertText: '$lastName',
 							range: range,
 							detail: 'Custom option 2'
 						}

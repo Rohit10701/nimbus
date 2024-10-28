@@ -3,7 +3,7 @@ import { fileURLToPath } from 'node:url'
 import path from 'node:path'
 import mainServer from './server/app'
 import { runClientIpc } from './server/_ipc'
-import { Profile } from './server/types/mockData'
+import { Profile } from './server/types/mock/mockData'
 import { keys } from 'ts-transformer-keys'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
