@@ -1,11 +1,18 @@
-import { app } from "./app";
+import express from 'express'
+import cors from 'cors'
+import { mockApiRouter } from './routes/mockSchemaRoutes'
+import * as dotenv from "dotenv"
+dotenv.config()
 
-require('dotenv').config();
-
-
-const PORT = process.env.PORT || 5000;
+const PORT = 3001
 function nodeServer() {
-    app.listen(PORT, () => console.log(`Server running on port ${PORT}`));
+	const app = express()
+
+	app.use(express.json())
+	app.use(cors())
+
+	app.use('/mockSchemaApi', mockApiRouter)
+	app.listen(PORT, () => console.log(`Server running on port ${PORT}`))
 }
 
-export {nodeServer}
+export default nodeServer

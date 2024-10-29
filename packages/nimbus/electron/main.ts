@@ -1,7 +1,7 @@
 import { app, BrowserWindow, ipcMain } from 'electron'
 import { fileURLToPath } from 'node:url'
 import path from 'node:path'
-import { nodeServer } from './server/server'
+import nodeServer  from './server/server'
 const __dirname = path.dirname(fileURLToPath(import.meta.url))
 
 // The built directory structure
@@ -82,6 +82,9 @@ ipcMain.handle('get-suggestions', async () => {
     return []
 })
 
-app.whenReady().then(createWindow)
+app.whenReady().then(async () => {
+	nodeServer()
+	createWindow()
+})
 
-nodeServer()
+
