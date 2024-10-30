@@ -13,4 +13,30 @@ const db = knex({
     useNullAsDefault: true 
 });
 
+
+async function initializeDatabase() {
+    try {
+        // Check if the table already exists
+        const tableExists = await db.schema.hasTable('MockApiData');
+
+        // If the table does not exist, create it
+        if (!tableExists) {
+            await db.schema.createTable('MockApiData', (table) => {
+                table.string('id').primary(); 
+                table.string('schema'); 
+                table.string('data'); 
+                table.string('createdAt'); 
+                table.string('updatedAt'); 
+                table.string('metadata'); 
+            });
+            console.log('Table MockApiData created successfully.');
+        } else {
+            console.log('Table MockApiData already exists.');
+        }
+    } catch (error) {
+        console.error('Error initializing database:', error);
+    }
+}
+initializeDatabase()
+
 export { db };

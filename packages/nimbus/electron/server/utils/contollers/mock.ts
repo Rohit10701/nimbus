@@ -49,7 +49,7 @@ export const boxMullerTransform = (): number => {
 }
 
 export const handleError = (error: unknown, requestId: string, res: Response): void => {
-	console.error({ error, requestId })
+	console.error({ error :  JSON.stringify(error, null, 2), requestId })
 
 	if (error instanceof Error) {
 		res.status(400).json({

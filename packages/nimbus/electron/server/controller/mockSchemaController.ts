@@ -4,108 +4,114 @@ import { JsonObjectType } from '../types/json'
 import { generateTheMockDataFromSchema } from '../utils/json'
 import { db } from '../config/db'
 import { handleError, simulateLatency, validateMetadata } from '../utils/contollers/mock'
+import parseJson, {JSONError} from 'parse-json';
 
 // CREATE - Create new mock data
 export const createMockApi = async (req: Request, res: Response): Promise<void> => {
-	const startTime = Date.now()
-	const requestId = uuidv4()
+    const startTime = Date.now();
+    const requestId = uuidv4();
 
-	try {
-		if (!req.body?.schema || !req.body?.metadata) {
-			res.status(400).json({
-				error: "Request body must include 'schema' and 'metadata'.",
-				requestId,
-				timestamp: new Date().toISOString()
-			})
-			return
-		}
+    try {
+        if (!req.body?.schema || !req.body?.metadata) {
+            res.status(400).json({
+                error: "Request body must include 'schema' and 'metadata'.",
+                requestId,
+                timestamp: new Date().toISOString()
+            });
+            return;
+        }
 
-		const metadata: MockApiMetadata = req.body.metadata
-		validateMetadata(metadata)
+        const metadata = req.body.metadata as MockApiMetadata;
+        validateMetadata(metadata);
 
-		// Simulate errors if specified
-		if (metadata.errorRate && Math.random() * 100 < metadata.errorRate) {
-			const errorCode = parseInt(metadata.errorCode || '500')
-			res.status(errorCode).json({
-				error: `Simulated error (${errorCode})`,
-				requestId,
-				timestamp: new Date().toISOString()
-			})
-			return
-		}
-
-		const jsonSchema: JsonObjectType = req.body.schema
-		const limit = metadata.limit || 10
-		const mockData: JsonObjectType[] = Array.from({ length: limit }, () =>
-			generateTheMockDataFromSchema(jsonSchema)
-		)
-
-		// Store in database
-
-		// MockData Table : [_id, schema, data, createAt, updatedAt, metaData]
-		const mockApiId = uuidv4()
-		const createdAt = new Date().toISOString()
-		const updatedAt = createdAt
-
-		const insert = db.prepare(`
-      INSERT INTO MockApiData (id, schema, data, createdAt, updatedAt, metadata)
-      VALUES (?, ?, ?, ?, ?, ?)
-    `)
-
-		insert.run(
-			mockApiId,
-			JSON.stringify(jsonSchema),
-			JSON.stringify(mockData),
-			createdAt,
-			updatedAt,
-			JSON.stringify({
-				version: metadata.version,
-				limit: metadata.limit
-			})
-		)
-
-		// realm
-		/*    
-        realm().write(() => {
-          realm().create('MockApiData', {
-            _id: mockApiId,
-            schema: jsonSchema,
-            data: mockData,
-            createdAt: new Date(),
-            metadata: {
-              version: metadata.version,
-              limit
-            }
-          });
-        });
-    */
-		// Removed old constant delay simulation
-		await simulateLatency(metadata)
-
-		// Add custom headers if specified
-		if (metadata.headers) {
-			Object.entries(metadata.headers).forEach(([key, value]) => {
-				res.setHeader(key, value)
-			})
-		}
-
-		const response: MockApiResponse<{ id: string; data: JsonObjectType[] }> = {
-			data: {
-				id: mockApiId,
-				data: mockData
-			},
-			metadata: {
-				requestId,
-				timestamp: new Date().toISOString(),
-				processingTime: Date.now() - startTime
+        if (metadata.errorRate && Math.random() * 100 < metadata.errorRate) {
+            const errorCode = parseInt(metadata.errorCode || '500', 10);
+            res.status(errorCode).json({
+                error: `Simulated error (${errorCode})`,
+                requestId,
+                timestamp: new Date().toISOString()
+            });
+            return;
+        }
+		let jsonSchema : JsonObjectType = {};
+		try {			
+			jsonSchema = parseJson(req.body.schema) as JsonObjectType;
+		} catch (error) {
+			if(error instanceof JSONError){
+				res.status(400).json({
+					error: "Format of Schema is incorrect!",
+					requestId,
+					timestamp: new Date().toISOString()
+				});
+			}
+			else{
+				res.status(500).json(
+					{
+						error: "Internal Server Error Caused by Schema!",
+						requestId,
+						timestamp: new Date().toISOString()					
+				})
 			}
 		}
 
-		res.status(201).json(response)
-	} catch (error) {
-		handleError(error, requestId, res)
-	}
-}
+        const limit = metadata.limit || 10;
+        const mockData : JsonObjectType[]= [] 
+		Array.from({ length: limit }, () =>{
+            mockData.push(JSON.parse(JSON.stringify(generateTheMockDataFromSchema(jsonSchema)))) 
+		}
+        );
+
+        const mockApiId = uuidv4();
+        const createdAt = new Date().toISOString();
+        const updatedAt = createdAt;
+
+        try {
+			await db('MockApiData').insert({
+				id: String(mockApiId), // Ensure it's a string
+				schema: JSON.stringify(jsonSchema), // Already handled
+				data: JSON.stringify(mockData), // Already handled
+				createdAt: (createdAt), // Ensure it's a string
+				updatedAt: (updatedAt), // Ensure it's a string
+				metadata: JSON.stringify(metadata) // Already handled
+			});
+        } catch (dbError) {
+            handleError(dbError, requestId, res);
+            return;
+        }
+
+        await simulateLatency(metadata);
+
+        if (metadata.headers) {
+            Object.entries(metadata.headers).forEach(([key, value]) => {
+                res.setHeader(key, value);
+            });
+        }
+
+        const response: MockApiResponse<{ id: string; data: JsonObjectType[] }> = {
+            data: {
+                id: mockApiId,
+                data: mockData
+            },
+            metadata: {
+                requestId,
+                timestamp: new Date().toISOString(),
+                processingTime: Date.now() - startTime
+            }
+        };
+
+        res.status(201).json(response);
+    } catch (error) {
+        handleError(error, requestId, res);
+    }
+};
+
+
+// helper function to map sort fields and orders safely
+const allowedSortFields = ['createdAt', 'updatedAt', 'id'];
+const getSafeSortField = (field: string) => (allowedSortFields.includes(field) ? field : 'createdAt');
+
+const allowedSortOrder = ['asc', 'desc'];
+const getSafeSortOrder = (order: string) => (allowedSortOrder.includes(order) ? order : 'desc');
 
 // READ - Get mock data with pagination and filtering
 export const getMockApi = async (req: Request, res: Response): Promise<void> => {
@@ -127,13 +133,18 @@ export const getMockApi = async (req: Request, res: Response): Promise<void> => 
 			return;
 		}
 
-		const statement = db.prepare(`
-			SELECT * FROM MockApiData WHERE id = ? ORDER BY ${sortBy} ${sortOrder} LIMIT ? OFFSET ?
-		`);
+		// Pagination calculations
 		const startIndex = (Number(page) - 1) * Number(limit);
-		const paginatedData = statement.all(id, limit, startIndex);
+		const safeSortBy = getSafeSortField(sortBy);
+		const safeSortOrder = getSafeSortOrder(sortOrder);
 
-		if (paginatedData.length === 0) {
+		const paginatedData = db('MockApiData')
+			.where({ id })
+			.orderBy(safeSortBy, safeSortOrder)
+			.limit(Number(limit))
+			.offset(startIndex);
+
+		if (!paginatedData || paginatedData.length === 0) {
 			res.status(404).json({ error: 'Mock API not found', requestId, timestamp: new Date().toISOString() });
 			return;
 		}
@@ -177,10 +188,9 @@ export const deleteMockApi = async (req: Request, res: Response): Promise<void> 
 			return;
 		}
 
-		const deleteStmt = db.prepare('DELETE FROM MockApiData WHERE id = ?');
-		const result = deleteStmt.run(id);
+		const result = await db('MockApiData').where({ id }).del();
 
-		if (result.changes === 0) {
+		if (!result) {
 			res.status(404).json({ error: 'Mock API not found', requestId, timestamp: new Date().toISOString() });
 			return;
 		}
@@ -202,7 +212,6 @@ export const deleteMockApi = async (req: Request, res: Response): Promise<void> 
 	}
 };
 
-
 // LIST - Get all mock APIs with pagination
 export const listMockApis = async (req: Request, res: Response): Promise<void> => {
 	const startTime = Date.now();
@@ -221,14 +230,17 @@ export const listMockApis = async (req: Request, res: Response): Promise<void> =
 			return;
 		}
 
-		const totalStmt = db.prepare('SELECT COUNT(*) as count FROM MockApiData');
-		const { count: totalRecords } = totalStmt.get();
+		const totalRecords = await db('MockApiData').count('id as count').first().then(row => row?.count || 0);
 
+		// Pagination calculations
 		const startIndex = (Number(page) - 1) * Number(limit);
-		const paginatedStmt = db.prepare(`
-			SELECT * FROM MockApiData ORDER BY ${sortBy} ${sortOrder} LIMIT ? OFFSET ?
-		`);
-		const paginatedData = paginatedStmt.all(limit, startIndex);
+		const safeSortBy = getSafeSortField(sortBy);
+		const safeSortOrder = getSafeSortOrder(sortOrder);
+
+		const paginatedData = await db('MockApiData')
+			.orderBy(safeSortBy, safeSortOrder)
+			.limit(Number(limit))
+			.offset(startIndex);
 
 		await simulateLatency(metadata);
 
