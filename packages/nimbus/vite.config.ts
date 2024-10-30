@@ -5,6 +5,19 @@ import { defineConfig, UserConfig } from 'vite'
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 import commonjs from '@rollup/plugin-commonjs'
 
+// List all database-related modules that should be external
+const databaseModules = [
+  'pg',
+  'tedious',
+  'mysql',
+  'mysql2',
+  'oracledb',
+  'pg-query-stream',
+  'better-sqlite3',
+  'sqlite3',
+  'knex'
+]
+
 export default defineConfig({
   build: {
     target: 'esnext',
@@ -17,7 +30,11 @@ export default defineConfig({
       external: [
         'electron',
         /^electron\/.*/,
-        'node:path'
+        'node:url',
+        'node:path',
+        ...databaseModules,
+        /^better-sqlite3\/.*/,
+        /^pg\/.*/
       ]
     },
   },
@@ -27,11 +44,17 @@ export default defineConfig({
     electron({
       main: {
         entry: 'electron/main.ts',
-        // Remove buildOptions and put rollup options directly in vite configuration
         vite: {
           build: {
             rollupOptions: {
-              external: ['electron']
+              external: [
+                'electron',
+                ...databaseModules,
+                /^better-sqlite3\/.*/,
+                /^pg\/.*/,
+                // Add Node.js built-in modules
+                /^node:.*/
+              ]
             }
           }
         }
@@ -41,9 +64,7 @@ export default defineConfig({
       },
       renderer: process.env.NODE_ENV === 'test'
         ? undefined
-        : {
-			
-          } as const,
+        : {} as const,
     }),
     commonjs({
       include: [
@@ -67,6 +88,6 @@ export default defineConfig({
     mainFields: ['module', 'jsnext:main', 'jsnext', 'main']
   },
   optimizeDeps: {
-    exclude: ['electron']
+    exclude: ['electron', ...databaseModules]
   }
 } as UserConfig)

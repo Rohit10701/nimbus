@@ -13,7 +13,7 @@
     "build": "tsc && vite build && electron-builder",
     "lint": "eslint . --ext ts,tsx --report-unused-disable-directives --max-warnings 0",
     "preview": "vite preview",
-    "rebuild": "electron-rebuild -f -w better-sqlite3"
+    "rebuild": "electron-rebuild -f -w better-sqlite3 sqlite3 knex"
   },
   "dependencies": {
     "@faker-js/faker": "^9.0.3",
@@ -21,6 +21,7 @@
     "@reduxjs/toolkit": "^2.3.0",
     "@tanstack/react-router": "^1.76.1",
     "axios": "^1.7.7",
+    "better-sqlite3": "^11.5.0",
     "bindings": "^1.5.0",
     "casual": "^1.6.2",
     "chance": "^1.1.12",
@@ -28,6 +29,7 @@
     "dotenv": "^16.4.5",
     "electron": "^33.0.2",
     "express": "^4.21.1",
+    "knex": "^3.1.0",
     "parse-json": "^8.1.0",
     "react": "^18.2.0",
     "react-dom": "^18.2.0",

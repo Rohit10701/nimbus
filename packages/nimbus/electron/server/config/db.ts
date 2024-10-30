@@ -1,5 +1,16 @@
-import sqlite3 from 'sqlite3'
+import knex from 'knex';
+import path from 'path';
+import { fileURLToPath } from 'node:url';
+import { dirname, join } from 'node:path';
 
-const db = new sqlite3.Database(':memory:');
+const currentDir = dirname(fileURLToPath(import.meta.url));
 
-export {db}
+const db = knex({
+    client: 'sqlite3',
+    connection: {
+        filename: path.join(currentDir, 'database.sqlite')
+    },
+    useNullAsDefault: true 
+});
+
+export { db };
