@@ -57,7 +57,7 @@ export const createMockApi = async (req: Request, res: Response): Promise<void> 
         const limit = metadata.limit || 10;
         const mockData : JsonObjectType[]= [] 
 		Array.from({ length: limit }, () =>{
-            mockData.push(JSON.parse(JSON.stringify(generateTheMockDataFromSchema(jsonSchema)))) 
+            mockData.push(generateTheMockDataFromSchema(JSON.parse(JSON.stringify(jsonSchema))))
 		}
         );
 
