@@ -165,7 +165,7 @@ export const getMockApi = async (req: Request, res: Response): Promise<void> => 
 				.json({ error: 'Mock API not found', requestId, timestamp: new Date().toISOString() })
 			return
 		}
-		const paginatedData = startIndex ? jsonMockData.slice(startIndex, startIndex+Number(limit)) : jsonMockData
+		const paginatedData = jsonMockData.slice(startIndex, startIndex + Number(limit))
 		await simulateLatency(metadata)
 
 		const response: MockApiResponse<typeof jsonMockData> = {
