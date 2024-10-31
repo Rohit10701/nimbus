@@ -13,7 +13,7 @@ export const SchemaContainer = () => {
 				schema : jsonSchemaPayload,
 				metadata : {
 					limit : 10,
-					version  : 1,
+					version  : 2,
 					delay: 200, // min would be 50ms
 					errorRate : 10, // 10% max is 100
 					errorCode : 500,

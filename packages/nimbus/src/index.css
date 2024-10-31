@@ -2,3 +2,23 @@
 @tailwind components;
 @tailwind utilities;
 
+:root {
+    /* Base colors */
+    --color-primary-dark: #7b3016;
+    --color-primary: #ac7e61;
+    --color-primary-light: #a2685f;
+
+    --color-background: #ece2db;
+    --color-accent-light: #cea979;
+    --color-accent: #915d46;
+    --color-accent-dark: #c6976d;
+
+    --color-button: #a56351;
+    --color-button-hover: #88493e;
+    --color-border: #462507;
+
+    /* base */
+
+    --border-radius : 0.5rem;
+    --border-width: 2px;
+}

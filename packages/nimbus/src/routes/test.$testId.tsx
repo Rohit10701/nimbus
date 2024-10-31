@@ -1,4 +1,4 @@
-import { createFileRoute } from '@tanstack/react-router'
+import { createFileRoute, Link } from '@tanstack/react-router'
 import React from 'react'
 
 export const Route = createFileRoute('/test/$testId')({
@@ -7,5 +7,6 @@ export const Route = createFileRoute('/test/$testId')({
 
 export default function Test() {
   const { testId } = Route.useParams()
-  return <div>Test : {testId}</div>
+  return <div>Test : {testId}
+  <Link href='/'>link</Link></div>
 }
