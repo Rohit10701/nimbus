@@ -13,9 +13,9 @@ function nodeServer() {
 	app.use(cors())
 
 	app.use('/mockSchemaApi', mockApiRouter)
-	app.post('/mockSchema/:id', async (req, res) => {
+	app.get('/mockSchema/:id', async (req, res) => {
 		const { id } = req.params;
-		const {page, limit} 
+		const {page, limit}  = req.query
 		try {
 			const row = await db('MockApiData').where({ id }).first();
 	

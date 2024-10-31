@@ -4,7 +4,7 @@ import {createMockApi, getMockApi, deleteMockApi, listMockApis} from "../control
 const mockApiRouter = express.Router();
 
 mockApiRouter.post('/', createMockApi);
-mockApiRouter.get('/:id', getMockApi);
+mockApiRouter.get('/:version/:id', getMockApi);
 mockApiRouter.get('/', listMockApis);
 mockApiRouter.delete('/', deleteMockApi)
 

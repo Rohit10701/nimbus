@@ -56,7 +56,6 @@ const SchemaEditor = ({ value, updateHandler }: SchemaEditorProps) => {
 	}
 
 	return (
-		<div className="h-[400px] w-full">
 			<Editor
 				options={{
 					automaticLayout: true
@@ -64,12 +63,13 @@ const SchemaEditor = ({ value, updateHandler }: SchemaEditorProps) => {
 				theme="vs-dark"
 				language="json"
 				height="100%"
+				width="100%"
+				className='h-screen'
 				defaultValue={value}
 				beforeMount={handleEditorWillMount}
 				onChange={(newValue) => updateHandler(newValue)}
 				onMount={handleEditorDidMount}
 			/>
-		</div>
 	)
 }
 

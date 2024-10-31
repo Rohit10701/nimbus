@@ -14,18 +14,19 @@ import { createFileRoute } from '@tanstack/react-router'
 
 import { Route as rootRoute } from './routes/__root'
 import { Route as TestTestIdImport } from './routes/test.$testId'
+import { Route as homeLayoutImport } from './routes/(home)/_layout'
+import { Route as homeLayoutIndexImport } from './routes/(home)/_layout/index'
 
 // Create Virtual Routes
 
-const IndexLazyImport = createFileRoute('/')()
+const homeImport = createFileRoute('/(home)')()
 
 // Create/Update Routes
 
-const IndexLazyRoute = IndexLazyImport.update({
-  id: '/',
-  path: '/',
+const homeRoute = homeImport.update({
+  id: '/(home)',
   getParentRoute: () => rootRoute,
-} as any).lazy(() => import('./routes/index.lazy').then((d) => d.Route))
+} as any)
 
 const TestTestIdRoute = TestTestIdImport.update({
   id: '/test/$testId',
@@ -33,16 +34,34 @@ const TestTestIdRoute = TestTestIdImport.update({
   getParentRoute: () => rootRoute,
 } as any)
 
+const homeLayoutRoute = homeLayoutImport.update({
+  id: '/_layout',
+  getParentRoute: () => homeRoute,
+} as any)
+
+const homeLayoutIndexRoute = homeLayoutIndexImport.update({
+  id: '/',
+  path: '/',
+  getParentRoute: () => homeLayoutRoute,
+} as any)
+
 // Populate the FileRoutesByPath interface
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
-    '/': {
-      id: '/'
+    '/(home)': {
+      id: '/(home)'
       path: '/'
       fullPath: '/'
-      preLoaderRoute: typeof IndexLazyImport
+      preLoaderRoute: typeof homeImport
       parentRoute: typeof rootRoute
+    }
+    '/(home)/_layout': {
+      id: '/(home)/_layout'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof homeLayoutImport
+      parentRoute: typeof homeRoute
     }
     '/test/$testId': {
       id: '/test/$testId'
@@ -51,43 +70,79 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof TestTestIdImport
       parentRoute: typeof rootRoute
     }
+    '/(home)/_layout/': {
+      id: '/(home)/_layout/'
+      path: '/'
+      fullPath: '/'
+      preLoaderRoute: typeof homeLayoutIndexImport
+      parentRoute: typeof homeLayoutImport
+    }
   }
 }
 
 // Create and export the route tree
 
+interface homeLayoutRouteChildren {
+  homeLayoutIndexRoute: typeof homeLayoutIndexRoute
+}
+
+const homeLayoutRouteChildren: homeLayoutRouteChildren = {
+  homeLayoutIndexRoute: homeLayoutIndexRoute,
+}
+
+const homeLayoutRouteWithChildren = homeLayoutRoute._addFileChildren(
+  homeLayoutRouteChildren,
+)
+
+interface homeRouteChildren {
+  homeLayoutRoute: typeof homeLayoutRouteWithChildren
+}
+
+const homeRouteChildren: homeRouteChildren = {
+  homeLayoutRoute: homeLayoutRouteWithChildren,
+}
+
+const homeRouteWithChildren = homeRoute._addFileChildren(homeRouteChildren)
+
 export interface FileRoutesByFullPath {
-  '/': typeof IndexLazyRoute
+  '/': typeof homeLayoutIndexRoute
   '/test/$testId': typeof TestTestIdRoute
 }
 
 export interface FileRoutesByTo {
-  '/': typeof IndexLazyRoute
   '/test/$testId': typeof TestTestIdRoute
+  '/': typeof homeLayoutIndexRoute
 }
 
 export interface FileRoutesById {
   __root__: typeof rootRoute
-  '/': typeof IndexLazyRoute
+  '/(home)': typeof homeRouteWithChildren
+  '/(home)/_layout': typeof homeLayoutRouteWithChildren
   '/test/$testId': typeof TestTestIdRoute
+  '/(home)/_layout/': typeof homeLayoutIndexRoute
 }
 
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
   fullPaths: '/' | '/test/$testId'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/test/$testId'
-  id: '__root__' | '/' | '/test/$testId'
+  to: '/test/$testId' | '/'
+  id:
+    | '__root__'
+    | '/(home)'
+    | '/(home)/_layout'
+    | '/test/$testId'
+    | '/(home)/_layout/'
   fileRoutesById: FileRoutesById
 }
 
 export interface RootRouteChildren {
-  IndexLazyRoute: typeof IndexLazyRoute
+  homeRoute: typeof homeRouteWithChildren
   TestTestIdRoute: typeof TestTestIdRoute
 }
 
 const rootRouteChildren: RootRouteChildren = {
-  IndexLazyRoute: IndexLazyRoute,
+  homeRoute: homeRouteWithChildren,
   TestTestIdRoute: TestTestIdRoute,
 }
 
@@ -103,15 +158,29 @@ export const routeTree = rootRoute
     "__root__": {
       "filePath": "__root.tsx",
       "children": [
-        "/",
+        "/(home)",
         "/test/$testId"
       ]
     },
-    "/": {
-      "filePath": "index.lazy.tsx"
+    "/(home)": {
+      "filePath": "(home)",
+      "children": [
+        "/(home)/_layout"
+      ]
+    },
+    "/(home)/_layout": {
+      "filePath": "(home)/_layout.tsx",
+      "parent": "/(home)",
+      "children": [
+        "/(home)/_layout/"
+      ]
     },
     "/test/$testId": {
       "filePath": "test.$testId.tsx"
+    },
+    "/(home)/_layout/": {
+      "filePath": "(home)/_layout/index.tsx",
+      "parent": "/(home)/_layout"
     }
   }
 }
