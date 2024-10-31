@@ -4,9 +4,13 @@ import Header from '../common/headers';
 
 function MainLayout() {
   return (
-    <div className='h-screen p-2'>
-      <Header />
-      <Outlet />
+    <div className='min-h-screen p-2 flex flex-col overflow-auto'>
+      <header role="banner">
+        <Header />
+      </header>
+      <main role="main" className="flex-1 overflow-auto">
+        <Outlet />
+      </main>
     </div>
   );
 }
