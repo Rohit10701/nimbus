@@ -9,7 +9,7 @@ export const Route = createFileRoute('/(home)/_layout/')({
 
 const WorkspacePage = () => {
 	return (
-		<div className=' w-full h-screen flex-1 my-2'>
+		<div className=' w-full h-svh flex-1 my-1'>
 			<MockApiView />
 		</div>
 	)

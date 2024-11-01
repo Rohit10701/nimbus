@@ -6,20 +6,9 @@ import InputContainer from './InputContainer'
 
 const RequestContainer = () => {
 	return (
-		<div>
-            <InputContainer />
-			<PanelGroup
-				autoSaveId='input-container-partation'
-				direction='horizontal'>
-				<Panel>
-					<SchemaContainer />
-				</Panel>
-				<PanelResizeHandle />
-				<Panel>
-					<ApiVariableContainer />
-				</Panel>
-			</PanelGroup>
-		</div>
+		<Panel>
+
+		</Panel>
 	)
 }
 

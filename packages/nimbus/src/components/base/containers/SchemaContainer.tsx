@@ -35,12 +35,18 @@ export const SchemaContainer = () => {
 
 
 	return (
-		<div>
-			<button
+		<div
+		style={{
+			border: 'var(--border-width) solid var(--color-border)',
+			borderRadius: 'var(--border-radius)',
+		  }}
+		  className='h-full'
+		>
+			{/* <button
 				className='bg-red-500'
 				onClick={logger}>
 				click
-			</button>
+			</button> */}
 			<SchemaEditor
 				value={jsonSchemaPayload}
 				updateHandler={jsonPayloadHandler}

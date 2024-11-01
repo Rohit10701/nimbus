@@ -13,7 +13,7 @@ const MockApiView = () => {
 				autoSaveId='main-container'
 				direction='horizontal'>
 				<Panel
-					className='bg-red-300 mr-2'
+					className='bg-red-300 mr-1'
 					style={{
 						border: 'var(--border-width) solid var(--color-border)',
 						borderRadius: 'var(--border-radius)'
@@ -29,11 +29,32 @@ const MockApiView = () => {
 					<PanelGroup
 						autoSaveId='input-container'
 						direction='vertical'>
-						<Panel className='bg-pink-300 mb-2'>
-							<RequestContainer />
+						<Panel className='mb-2'>
+							<PanelGroup
+								direction='vertical'
+								autoSaveId='request-body-container'>
+								<Panel className='max-h-fit mb-2'>
+									<InputContainer />
+								</Panel>
+								<PanelResizeHandle />
+								<Panel>
+									<PanelGroup
+										className='h-full '
+										autoSaveId='input-container-partation'
+										direction='horizontal'>
+										<Panel className='mr-1'>
+											<SchemaContainer />
+										</Panel>
+										<PanelResizeHandle />
+										<Panel className=''>
+											<ApiVariableContainer />
+										</Panel>
+									</PanelGroup>
+								</Panel>
+							</PanelGroup>
 						</Panel>
 						<PanelResizeHandle />
-						<Panel className='bg-yellow-300'>
+						<Panel>
 							<ResponseContainer />
 						</Panel>
 					</PanelGroup>

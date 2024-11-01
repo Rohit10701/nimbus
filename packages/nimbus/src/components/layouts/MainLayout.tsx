@@ -4,7 +4,7 @@ import Header from '../common/headers';
 
 function MainLayout() {
   return (
-    <div className='h-screen p-2'>
+    <div className='h-screen p-1'>
       <Header />
       <Outlet />
     </div>

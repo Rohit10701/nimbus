@@ -64,7 +64,7 @@ const SchemaEditor = ({ value, updateHandler }: SchemaEditorProps) => {
 				language="json"
 				height="100%"
 				width="100%"
-				className='h-screen'
+				className='min-h-fit'
 				defaultValue={value}
 				beforeMount={handleEditorWillMount}
 				onChange={(newValue) => updateHandler(newValue)}
