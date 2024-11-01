@@ -22,10 +22,12 @@ export default defineConfig({
   build: {
     target: 'esnext',
     rollupOptions: {
+      preserveEntrySignatures : "strict",
       output: {
         format: 'cjs',
         preserveModules: true,
-        entryFileNames: '[name].js'
+        entryFileNames: '[name].js',
+        exports: 'named'
       },
       external: [
         'electron',
@@ -34,7 +36,9 @@ export default defineConfig({
         'node:path',
         ...databaseModules,
         /^better-sqlite3\/.*/,
-        /^pg\/.*/
+        /^pg\/.*/,
+        'sqlite3',
+        /^sqlite3\/.*/,
       ]
     },
   },
@@ -47,6 +51,7 @@ export default defineConfig({
         vite: {
           build: {
             rollupOptions: {
+
               external: [
                 'electron',
                 ...databaseModules,

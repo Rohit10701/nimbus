@@ -46,10 +46,8 @@ const mockApiSlice = createSlice({
     saveMockApiRequestMetaData: (state, action: PayloadAction<MockApiMetadata | undefined>) => {
       state.mockApiRequestMetaData = action.payload;
     },
-    requestCreateMockApi : (state) => {
-    }
   },
 });
 
-export const { saveMockApiRequestData, saveMockApiRequestMetaData, requestCreateMockApi } = mockApiSlice.actions;
+export const { saveMockApiRequestData, saveMockApiRequestMetaData } = mockApiSlice.actions;
 export default mockApiSlice.reducer;

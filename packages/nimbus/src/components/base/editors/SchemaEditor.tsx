@@ -1,5 +1,5 @@
 import { Editor, Monaco, OnMount } from '@monaco-editor/react'
-import React, { useRef } from 'react'
+import { useRef } from 'react'
 
 interface SchemaEditorProps {
 	value: string | undefined
@@ -10,6 +10,7 @@ const SchemaEditor = ({ value, updateHandler }: SchemaEditorProps) => {
 	const monacoRef = useRef<Monaco | null>(null)
 
 	const handleEditorDidMount: OnMount = (editor, monaco) => {
+		console.log(editor)
 		monacoRef.current = monaco
 	}
 

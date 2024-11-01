@@ -15,7 +15,7 @@ function nodeServer() {
 	app.use('/mockSchemaApi', mockApiRouter)
 	app.get('/mockSchema/:id', async (req, res) => {
 		const { id } = req.params;
-		const {page, limit}  = req.query
+		// const {page, limit}  = req.query
 		try {
 			const row = await db('MockApiData').where({ id }).first();
 	

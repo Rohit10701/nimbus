@@ -1,4 +1,4 @@
-import parseJson, { JSONError } from "parse-json";
+import  { JSONError } from "parse-json";
 import { JsonObjectType } from "../../types/json";
 import { Fields } from "../../types/mock/mockDataTemplate";
 import { generateRandomDataForFields } from "../mock/generateUserProfile";

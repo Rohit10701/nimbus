@@ -1,9 +1,7 @@
-import React from 'react'
 import { Panel, PanelGroup, PanelResizeHandle } from 'react-resizable-panels'
 import { SchemaContainer } from '../base/containers/SchemaContainer'
 import ApiVariableContainer from '../base/containers/ApiVariableContainer'
 import InputContainer from '../base/containers/InputContainer'
-import RequestContainer from '../base/containers/RequestContainer'
 import ResponseContainer from '../base/containers/ResponseContainer'
 
 const MockApiView = () => {

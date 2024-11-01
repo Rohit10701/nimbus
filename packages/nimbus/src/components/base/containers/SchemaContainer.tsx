@@ -1,6 +1,5 @@
-import React, { useEffect, useState, version } from 'react'
+import { useEffect } from 'react'
 import SchemaEditor from '../editors/SchemaEditor'
-import axios from 'axios'
 import { useAppDispatch } from '../../../libs/redux/hooks'
 import { saveMockApiRequestData } from '../../../libs/redux/slices/mockApiSlice'
 import { useSelector } from 'react-redux'

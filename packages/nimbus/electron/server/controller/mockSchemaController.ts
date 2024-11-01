@@ -120,12 +120,12 @@ export const getMockApi = async (req: Request, res: Response): Promise<void> => 
 	const requestId = uuidv4()
 	console.log({requestId})
 	try {
-		const { id, version } = req.params
+		const { id } = req.params
 		const {
 			page = 1,
 			limit = 10,
-			sortBy = 'createdAt',
-			sortOrder = 'desc'
+			// sortBy = 'createdAt',
+			// sortOrder = 'desc'
 		} = req.query as unknown as PaginationOptions
 		const metadata: MockApiMetadata = req.query as unknown as MockApiMetadata
 
@@ -147,8 +147,8 @@ export const getMockApi = async (req: Request, res: Response): Promise<void> => 
 
 		// Pagination calculations
 		const startIndex = (Number(page) - 1) * Number(limit)
-		const safeSortBy = getSafeSortField(sortBy)
-		const safeSortOrder = getSafeSortOrder(sortOrder)
+		// const safeSortBy = getSafeSortField(sortBy)
+		// const safeSortOrder = getSafeSortOrder(sortOrder)
 
 		const rawMockData : ApiDataType[] = await db.select("*").from('MockApiData').where("id", id)
 		console.log({rawMockData})
@@ -266,10 +266,10 @@ export const listMockApis = async (req: Request, res: Response): Promise<void> =
 			return
 		}
 
-		const totalRecords = await db('MockApiData')
-			.count('id as count')
-			.first()
-			.then((row) => row?.count || 0)
+		// const totalRecords = await db('MockApiData')
+		// 	.count('id as count')
+		// 	.first()
+		// 	.then((row) => row?.count || 0)
 
 		// Pagination calculations
 		const startIndex = (Number(page) - 1) * Number(limit)
@@ -290,8 +290,8 @@ export const listMockApis = async (req: Request, res: Response): Promise<void> =
 				timestamp: new Date().toISOString(),
 				processingTime: Date.now() - startTime,
 				page: Number(page),
-				totalPages: Math.ceil(totalRecords / Number(limit)),
-				totalRecords
+				// totalPages: Math.ceil(totalRecords / Number(limit)),
+				// totalRecords
 			}
 		}
 
