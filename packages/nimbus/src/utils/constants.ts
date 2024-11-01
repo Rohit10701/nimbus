@@ -1,0 +1,2 @@
+
+export const BACKEND_NODE_SERVER_ENDPOINT = import.meta.env.BACKEND_NODE_SERVER_ENDPOINT

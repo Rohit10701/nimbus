@@ -1,47 +1,37 @@
 import React, { useEffect, useState, version } from 'react'
 import SchemaEditor from '../editors/SchemaEditor'
 import axios from 'axios'
+import { useAppDispatch } from '../../../libs/redux/hooks'
+import { saveMockApiRequestData } from '../../../libs/redux/slices/mockApiSlice'
+import { useSelector } from 'react-redux'
+import { selectMockApiJsonSchema } from '../../../libs/redux/selectors'
 
 export const SchemaContainer = () => {
-	const [jsonSchemaPayload, setJsonSchemaPayload] = useState<string>()
+	// hooks
+	const disptach = useAppDispatch()
+	const jsonSchemaPayload = useSelector(selectMockApiJsonSchema)
+
+	// handler
 	const jsonPayloadHandler = (value: string | undefined) => {
-		setJsonSchemaPayload(value)
+		disptach(saveMockApiRequestData(value))
 	}
-	const logger = async () => {
-		const res = await axios.post('http://localhost:3001/mockSchemaApi', 
-			{
-				schema : jsonSchemaPayload,
-				metadata : {
-					limit : 10,
-					version  : 2,
-					delay: 200, // min would be 50ms
-					errorRate : 10, // 10% max is 100
-					errorCode : 500,
-					authEnabled : true
-				}
-			}
-		)
-		console.log({ res })
-	}
-  useEffect(() => {
-	const fetchSuggestion = async () => {
-		console.log('electronAPI:', window.electronAPI);
-		const suggestions = await window.electronAPI?.getSuggestions();
-		console.log({suggestions})
-	}
-	fetchSuggestion()
-}, []);
 
-
+	useEffect(() => {
+		const fetchSuggestion = async () => {
+			console.log('electronAPI:', window.electronAPI)
+			const suggestions = await window.electronAPI?.getSuggestions()
+			console.log({ suggestions })
+		}
+		fetchSuggestion()
+	}, [])
 
 	return (
 		<div
-		style={{
-			border: 'var(--border-width) solid var(--color-border)',
-			borderRadius: 'var(--border-radius)',
-		  }}
-		  className='h-full'
-		>
+			style={{
+				border: 'var(--border-width) solid var(--color-border)',
+				borderRadius: 'var(--border-radius)'
+			}}
+			className='h-full'>
 			{/* <button
 				className='bg-red-500'
 				onClick={logger}>

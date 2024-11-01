@@ -1,25 +1,42 @@
-// src/sagas/dataSaga.ts
 import { call, put, takeLatest } from 'redux-saga/effects';
-import { fetchDataRequest, fetchDataSuccess, fetchDataFailure } from '../slices/mockApiSlice';
+import { requestCreateMockApi, saveMockApiRequestData, saveMockApiRequestMetaData } from '../slices/mockApiSlice';
+import axios from 'axios';
+import { BACKEND_NODE_SERVER_ENDPOINT } from '../../../utils/constants';
+import { PayloadAction } from '@reduxjs/toolkit';
 
-// Simulated API call
-function fetchDataApi() {
-  return fetch('https://api.example.com/data')
-    .then((response) => response.json())
-    .catch((error) => { throw error });
+const createMockApi = async (jsonSchemaPayload: string)  => {
+  const res = await axios.post(`${BACKEND_NODE_SERVER_ENDPOINT}/mockSchemaApi`, 
+    {
+      schema: jsonSchemaPayload,
+      metadata: {
+        limit: 10,
+        version: 2,
+        delay: 200,
+        errorRate: 10,
+        errorCode: 500,
+        authEnabled: true
+      }
+    }
+  );
+  return res.data;
 }
 
-// Define the saga to fetch data
-function* fetchData() {
+function* fetchData(action: PayloadAction<string>) {
   try {
-    const data: string[] = yield call(fetchDataApi);
-    yield put(fetchDataSuccess(data));
+    // yield put({ type: 'mockApi/loading', payload: true });
+    
+    const response = yield call(createMockApi, action.payload);
+    
+    yield put(saveMockApiRequestData(response.schema));
+    yield put(saveMockApiRequestMetaData(response.metadata));
+    
+    // yield put({ type: 'mockApi/loading', payload: false });
   } catch (error: any) {
-    yield put(fetchDataFailure(error.toString()));
+    // yield put({ type: 'mockApi/error', payload: error.message });
+    // yield put({ type: 'mockApi/loading', payload: false });
   }
 }
 
-// Watcher saga that watches for fetchDataRequest action
 export default function* watchFetchData() {
-  yield takeLatest(fetchDataRequest.type, fetchData);
+  yield takeLatest(requestCreateMockApi.type, fetchData);
 }

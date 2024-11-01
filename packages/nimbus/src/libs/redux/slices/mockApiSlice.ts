@@ -1,35 +1,55 @@
 import { createSlice, PayloadAction } from '@reduxjs/toolkit';
 
 interface DataState {
-  data: string[];
+  mockApiJsonSchemaRequestData?: string
+  mockApiRequestMetaData?: MockApiMetadata
+  mockApiResponse? : MockApiCreateResponse
   loading: boolean;
   error: string | null;
 }
 
+interface MockApiMetadata {
+  limit? : number,
+  version?  : number,
+  delay?: number,
+  errorRate? : number,
+  errorCode?: number,
+  authEnabled: boolean
+}
+interface MockApiCreateResponse {
+
+}
 const initialState: DataState = {
-  data: [],
+  mockApiJsonSchemaRequestData: undefined,
+  mockApiRequestMetaData : {
+    limit : undefined,
+    version  : undefined,
+    delay: undefined,
+    errorRate : undefined,
+    errorCode : undefined,
+    authEnabled : false
+  },
+  mockApiResponse : {
+
+  },
   loading: false,
   error: null,
 };
 
 const mockApiSlice = createSlice({
-  name: 'data',
+  name: 'mockApi',
   initialState,
   reducers: {
-    fetchDataRequest: (state) => {
-      state.loading = true;
-      state.error = null;
+    saveMockApiRequestData: (state, action: PayloadAction<string | undefined>) => {
+      state.mockApiJsonSchemaRequestData = action.payload;
     },
-    fetchDataSuccess: (state, action: PayloadAction<string[]>) => {
-      state.loading = false;
-      state.data = action.payload;
+    saveMockApiRequestMetaData: (state, action: PayloadAction<MockApiMetadata | undefined>) => {
+      state.mockApiRequestMetaData = action.payload;
     },
-    fetchDataFailure: (state, action: PayloadAction<string>) => {
-      state.loading = false;
-      state.error = action.payload;
-    },
+    requestCreateMockApi : (state) => {
+    }
   },
 });
 
-export const { fetchDataRequest, fetchDataSuccess, fetchDataFailure } = mockApiSlice.actions;
+export const { saveMockApiRequestData, saveMockApiRequestMetaData, requestCreateMockApi } = mockApiSlice.actions;
 export default mockApiSlice.reducer;
