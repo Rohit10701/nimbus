@@ -1,11 +1,10 @@
 import path from 'node:path'
 import electron from 'vite-plugin-electron/simple'
 import react from '@vitejs/plugin-react'
-import { defineConfig, UserConfig } from 'vite'
+import { defineConfig } from 'vite'
 import { TanStackRouterVite } from '@tanstack/router-plugin/vite'
 import commonjs from '@rollup/plugin-commonjs'
 
-// List all database-related modules that should be external
 const databaseModules = [
   'pg',
   'tedious',
@@ -20,27 +19,14 @@ const databaseModules = [
 
 export default defineConfig({
   build: {
-    target: 'esnext',
+    outDir: 'dist',
+    emptyOutDir: true,
     rollupOptions: {
-      preserveEntrySignatures : "strict",
-      output: {
-        format: 'cjs',
-        preserveModules: true,
-        entryFileNames: '[name].js',
-        exports: 'named'
-      },
       external: [
         'electron',
-        /^electron\/.*/,
-        'node:url',
-        'node:path',
-        ...databaseModules,
-        /^better-sqlite3\/.*/,
-        /^pg\/.*/,
-        'sqlite3',
-        /^sqlite3\/.*/,
+        ...databaseModules
       ]
-    },
+    }
   },
   plugins: [
     react(),
@@ -50,15 +36,11 @@ export default defineConfig({
         entry: 'electron/main.ts',
         vite: {
           build: {
+            outDir: 'dist-electron',
             rollupOptions: {
-
               external: [
                 'electron',
-                ...databaseModules,
-                /^better-sqlite3\/.*/,
-                /^pg\/.*/,
-                // Add Node.js built-in modules
-                /^node:.*/
+                ...databaseModules
               ]
             }
           }
@@ -66,33 +48,30 @@ export default defineConfig({
       },
       preload: {
         input: path.join(__dirname, 'electron/preload.ts'),
+        vite: {
+          build: {
+            outDir: 'dist-electron'
+          }
+        }
       },
-      renderer: process.env.NODE_ENV === 'test'
-        ? undefined
-        : {} as const,
+      renderer: {} 
     }),
     commonjs({
-      include: [
-        'providers/**',
-        'node_modules/**'
-      ],
+      include: ['providers/**', 'node_modules/**'],
       dynamicRequireTargets: [
         './providers/address',
         './providers/**/*.js',
         './dist-electron/**/*.mjs'
-      ] as string[],
+      ],
       ignoreDynamicRequires: false,
       transformMixedEsModules: true,
       requireReturnsDefault: 'preferred'
-    }),
+    })
   ],
   resolve: {
     alias: {
-      '@providers': path.resolve(__dirname, 'providers')
-    },
-    mainFields: ['module', 'jsnext:main', 'jsnext', 'main']
-  },
-  optimizeDeps: {
-    exclude: ['electron', ...databaseModules]
+      '@providers': path.resolve(__dirname, 'providers'),
+      '@': path.resolve(__dirname, 'src')
+    }
   }
-} as UserConfig)
+})
